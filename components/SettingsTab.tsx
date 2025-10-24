@@ -24,52 +24,34 @@ interface SettingsTabProps {
   onGoogleKeySave: (key: string) => void;
   openaiApiKey: string;
   onOpenaiKeySave: (key: string) => void;
-  grokApiKey: string;
-  onGrokKeySave: (key: string) => void;
-  deepseekApiKey: string;
-  onDeepseekKeySave: (key: string) => void;
 }
 
 const SettingsTab: React.FC<SettingsTabProps> = ({ 
     googleApiKey, onGoogleKeySave, 
     openaiApiKey, onOpenaiKeySave,
-    grokApiKey, onGrokKeySave,
-    deepseekApiKey, onDeepseekKeySave 
 }) => {
   const [googleKeyInput, setGoogleKeyInput] = useState(googleApiKey);
   const [openaiKeyInput, setOpenaiKeyInput] = useState(openaiApiKey);
-  const [grokKeyInput, setGrokKeyInput] = useState(grokApiKey);
-  const [deepseekKeyInput, setDeepseekKeyInput] = useState(deepseekApiKey);
 
-  const [googleKeyStatus, setGoogleKeyStatus] = useState('');
-  const [openaiKeyStatus, setOpenaiKeyStatus] = useState('');
-  const [grokKeyStatus, setGrokKeyStatus] = useState('');
-  const [deepseekKeyStatus, setDeepseekKeyStatus] = useState('');
+  const [googleKeyStatus, setGoogleKeyStatus] = useState({ message: '', isError: false });
+  const [openaiKeyStatus, setOpenaiKeyStatus] = useState({ message: '', isError: false });
 
   const handleSaveGoogle = () => {
     onGoogleKeySave(googleKeyInput);
-    setGoogleKeyStatus('Đã lưu!');
-    setTimeout(() => setGoogleKeyStatus(''), 2000);
+    setGoogleKeyStatus({ message: 'Đã lưu!', isError: false });
+    setTimeout(() => setGoogleKeyStatus({ message: '', isError: false }), 2000);
   };
 
   const handleSaveOpenai = () => {
+    if (openaiKeyInput.trim() && !openaiKeyInput.startsWith('sk-')) {
+        setOpenaiKeyStatus({ message: 'Key phải bắt đầu bằng "sk-"', isError: true });
+        setTimeout(() => setOpenaiKeyStatus({ message: '', isError: false }), 3000);
+        return;
+    }
     onOpenaiKeySave(openaiKeyInput);
-    setOpenaiKeyStatus('Đã lưu!');
-    setTimeout(() => setOpenaiKeyStatus(''), 2000);
+    setOpenaiKeyStatus({ message: 'Đã lưu!', isError: false });
+    setTimeout(() => setOpenaiKeyStatus({ message: '', isError: false }), 2000);
   };
-
-  const handleSaveGrok = () => {
-    onGrokKeySave(grokKeyInput);
-    setGrokKeyStatus('Đã lưu!');
-    setTimeout(() => setGrokKeyStatus(''), 2000);
-  };
-
-  const handleSaveDeepseek = () => {
-    onDeepseekKeySave(deepseekKeyInput);
-    setDeepseekKeyStatus('Đã lưu!');
-    setTimeout(() => setDeepseekKeyStatus(''), 2000);
-  };
-
 
   const YoutubeIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="32" height="32" viewBox="0 0 48 48">
@@ -110,6 +92,24 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
         </p>
         
         <div className="space-y-6">
+          {/* OpenAI API Key */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label htmlFor="openai-api-key" className="font-semibold text-white">OpenAI GPT-4o API Key:</label>
+              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">Lấy API Key</a>
+            </div>
+            <Input
+              id="openai-api-key"
+              type="password"
+              placeholder="Enter your OpenAI GPT-4o API key"
+              value={openaiKeyInput}
+              onChange={(e) => setOpenaiKeyInput(e.target.value)}
+            />
+            <Button onClick={handleSaveOpenai} className="w-full" variant={openaiKeyStatus.isError ? 'danger' : 'primary'}>
+               {openaiKeyStatus.message || 'Save OpenAI Key'}
+            </Button>
+          </div>
+
           {/* Google API Key */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -123,65 +123,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
               value={googleKeyInput}
               onChange={(e) => setGoogleKeyInput(e.target.value)}
             />
-            <Button onClick={handleSaveGoogle} className="w-full">
-               {googleKeyStatus || 'Save Google Key'}
+            <Button onClick={handleSaveGoogle} className="w-full" variant={googleKeyStatus.isError ? 'danger' : 'primary'}>
+               {googleKeyStatus.message || 'Save Google Key'}
             </Button>
           </div>
-
-          {/* OpenAI API Key */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="openai-api-key" className="font-semibold text-white">Chat GPT API Key:</label>
-              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">Lấy API Key</a>
-            </div>
-            <Input
-              id="openai-api-key"
-              type="password"
-              placeholder="Enter your Chat GPT API key"
-              value={openaiKeyInput}
-              onChange={(e) => setOpenaiKeyInput(e.target.value)}
-            />
-            <Button onClick={handleSaveOpenai} className="w-full">
-               {openaiKeyStatus || 'Save Chat GPT Key'}
-            </Button>
-          </div>
-
-          {/* Grok API Key */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="grok-api-key" className="font-semibold text-white">Grok API Key:</label>
-              <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">Lấy API Key</a>
-            </div>
-            <Input
-              id="grok-api-key"
-              type="password"
-              placeholder="Enter your Grok API key"
-              value={grokKeyInput}
-              onChange={(e) => setGrokKeyInput(e.target.value)}
-            />
-            <Button onClick={handleSaveGrok} className="w-full">
-               {grokKeyStatus || 'Save Grok Key'}
-            </Button>
-          </div>
-
-          {/* Deepseek API Key */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="deepseek-api-key" className="font-semibold text-white">Deepseek API Key:</label>
-              <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">Lấy API Key</a>
-            </div>
-            <Input
-              id="deepseek-api-key"
-              type="password"
-              placeholder="Enter your Deepseek API key"
-              value={deepseekKeyInput}
-              onChange={(e) => setDeepseekKeyInput(e.target.value)}
-            />
-            <Button onClick={handleSaveDeepseek} className="w-full">
-               {deepseekKeyStatus || 'Save Deepseek Key'}
-            </Button>
-          </div>
-
         </div>
       </div>
       
