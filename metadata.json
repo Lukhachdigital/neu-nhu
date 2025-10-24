@@ -1,0 +1,5 @@
+{
+  "name": "Tools dành cho kênh \"Nếu Như?\"",
+  "description": "A tool to generate a video script and corresponding JSON prompts from a simple content idea using the Gemini API.",
+  "requestFramePermissions": []
+}
