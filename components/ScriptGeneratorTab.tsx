@@ -13,8 +13,6 @@ interface Scene {
 interface ScriptGeneratorTabProps {
   googleApiKey: string;
   openaiApiKey: string;
-  grokApiKey: string;
-  deepseekApiKey: string;
 }
 
 // Function to parse duration string into seconds
@@ -98,7 +96,7 @@ const getApiErrorMessage = (error: unknown, provider: string): string => {
 };
 
 
-const ScriptGeneratorTab: React.FC<ScriptGeneratorTabProps> = ({ googleApiKey, openaiApiKey, grokApiKey, deepseekApiKey }) => {
+const ScriptGeneratorTab: React.FC<ScriptGeneratorTabProps> = ({ googleApiKey, openaiApiKey }) => {
   const [idea, setIdea] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('');
   const [scenes, setScenes] = useState<Scene[]>([]);
@@ -106,7 +104,7 @@ const ScriptGeneratorTab: React.FC<ScriptGeneratorTabProps> = ({ googleApiKey, o
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
-  const [apiProvider, setApiProvider] = useState<'google' | 'openai' | 'grok' | 'deepseek'>('google');
+  const [apiProvider, setApiProvider] = useState<'openai' | 'google'>('openai');
   const [scriptType, setScriptType] = useState<string>('KH Viễn tưởng / Triết học');
 
   const systemInstruction = `You are a master storyteller—a novelist, playwright, and philosopher—crafting scripts for the YouTube channel "Nếu Như?". Your mission is to weave terrifying, thought-provoking narratives that explore the deepest "what if" questions. Your style must be captivating, pulling the audience into a chilling speculative journey from which they can't look away.
@@ -114,17 +112,25 @@ const ScriptGeneratorTab: React.FC<ScriptGeneratorTabProps> = ({ googleApiKey, o
 **CHANNEL THEME:**
 The channel delves into terrifying hypothetical questions that challenge our perception of reality: *what if, philosophical horror, cosmic dread, alternate histories, scientific nightmares, existential questions.* Your goal is to make the audience feel the chilling implications of the scenario.
 
+**SCRIPT STYLE (CRITICAL):**
+- **Hypothetical & Question-Driven:** The entire script must be a relentless exploration of the core "what if" question. Constantly pose rhetorical and direct questions to the audience throughout the narration to keep them engaged and thinking. Don't just state facts; question everything.
+- **Dramatic & Kịch tính (Suspenseful):** Build tension throughout the script. Use dramatic language, vivid imagery, and a sense of escalating stakes. Every sentence should contribute to a feeling of suspense, dread, or awe. The narrative arc should be compelling and full of twists and chilling revelations.
+
 **OUTPUT STRUCTURE (CRITICAL):**
 Your entire output must be a single JSON object with two main keys: "full_voiceover" and "scenes".
-1.  **'full_voiceover' (String):** This is the complete, continuous narration for the entire video. It must be in VIETNAMESE. CRITICALLY, you must calculate the length of this text so that when read at a normal, engaging speaking pace, it fits the user's requested video duration. Your writing style must be natural, conversational, and use perfect punctuation (commas, periods, pauses) so it can be fed directly into a Text-to-Speech AI without any modifications. This is the single source for the final audio track.
+1.  **'full_voiceover' (String):** This is the complete, continuous narration for the entire video. It must be in VIETNAMESE.
 2.  **'scenes' (Array of Objects):** This is an array of scene objects. Each scene object corresponds to a part of the 'full_voiceover' and describes the visuals for it.
+
+**VOICEOVER WORD COUNT & QUALITY (ABSOLUTELY CRITICAL):**
+1.  **Strict Word Count per Scene:** The 'full_voiceover' must be logically divided among the scenes. The portion of the voiceover corresponding to EACH individual scene MUST contain between 120 and 126 Vietnamese words. This is a strict, non-negotiable rule. Do not average the word count; every single scene's text segment must meet this requirement.
+2.  **Flawless Language:** The entire 'full_voiceover' MUST have perfect Vietnamese grammar, spelling, and punctuation. The text must be ready for direct use in a Text-to-Speech (TTS) engine without requiring any corrections from the user. Use commas, periods, and sentence structures that create a natural, engaging, and professional narration.
 
 **SCENE & DURATION CALCULATION (ABSOLUTELY CRITICAL):**
 - **Each scene you generate will be turned into an 8-second video clip.** This is a fixed, non-negotiable rule.
 - You MUST calculate the total number of scenes required based on the user's requested video duration.
 - **Formula:** Total Scenes = (Total Duration in Seconds) / 8.
 - **Example:** For a 5-minute (300 seconds) video, you must generate approximately 37-38 scenes. A script with only 5 or 6 scenes for a 5-minute video is a complete failure and does not follow instructions.
-- The 'full_voiceover' must be divided logically across this calculated number of scenes.
+- The 'full_voiceover' must be divided logically across this calculated number of scenes, adhering to the strict word count per scene.
 
 **SCENE OBJECT REQUIREMENTS:**
 For each scene object in the 'scenes' array, provide:
@@ -144,9 +150,9 @@ For each scene object in the 'scenes' array, provide:
       - **Thảm họa Tự nhiên:** Describe massive-scale destruction as an uncaring, terrifying force of nature, awe-inspiring yet horrifyingly chaotic scenes.
       - **Tiền sử / Huyền bí:** Describe primal, brutal landscapes, terrifyingly giant dinosaurs, disturbing ancient rituals, and mythical beings of raw, incomprehensible power.
       - **Xã hội / Chính trị:** Describe scenes reflecting terrifying societal shifts: ghost-like empty stock markets, massive, frenzied protests, cold and dystopian surveillance. Use powerful, disturbing symbolic imagery.
-    - **CRITICAL AUDIO RULE (ABSOLUTE REQUIREMENT):** The 'prompt' MUST NOT contain any dialogue or human speech under any circumstances. Its sole purpose is to describe visuals and **AMBIENT/ENVIRONMENTAL SOUNDS**.
-        - **AMBIENT SOUNDS ARE PRIORITY:** Always include rich descriptions of environmental sounds that enhance the feeling of horror or loneliness (e.g., "haunting wind," "unsettling creaking metal," "distant, distorted sirens").
-        - **WHAT TO AVOID:** The prompt must never contain any form of dialogue, character speech, narration, or text that is meant to be spoken. All spoken content is exclusively handled by the single Vietnamese 'full_voiceover'.
+    - **PROMPT AUDIO RULE (ABSOLUTE, NON-NEGOTIABLE REQUIREMENT):**
+        - **ZERO DIALOGUE OR SPEECH:** The 'prompt' string MUST NOT, under any circumstances, contain any character dialogue, spoken words, narration, or any text intended to be read aloud. NO EXCEPTIONS. The ONLY spoken words in the entire project come from the 'full_voiceover'. Any violation of this rule is a failure.
+        - **AMBIENT SOUNDS ARE MANDATORY:** Every prompt MUST include a detailed description of the ambient and environmental sounds. These sounds are critical for setting the mood. Focus on sounds that create horror, loneliness, tension, or scale (e.g., "the deafening silence of space," "the sound of rock grinding against rock," "the eerie hum of alien machinery," "the distant, mournful cry of an unknown creature").
 3.  **Contextual Freedom:** You have complete creative freedom to choose the setting (locations, character ethnicities, cultural elements) that best serves the terrifying narrative. The context should be compelling and internally consistent throughout the script.
 4.  **FINAL SCENE REQUIREMENT (CRITICAL):**
     The very last scene of every script MUST be a direct question to the audience. This question should be thought-provoking, directly related to the video's theme, and designed to encourage comments and discussion. For example: "Bạn sẽ làm gì nếu ở trong tình huống đó? Hãy cho chúng tôi biết suy nghĩ của bạn." (What would you do in that situation? Let us know your thoughts.)
@@ -182,14 +188,10 @@ For each scene object in the 'scenes' array, provide:
     const apiKeys = {
         google: googleApiKey,
         openai: openaiApiKey,
-        grok: grokApiKey,
-        deepseek: deepseekApiKey,
     };
     const providerNames = {
         google: 'Google Gemini',
-        openai: 'Chat GPT',
-        grok: 'Grok',
-        deepseek: 'Deepseek'
+        openai: 'OpenAI GPT-4o',
     }
 
     if (!apiKeys[apiProvider]) {
@@ -283,10 +285,6 @@ For each scene object in the 'scenes' array, provide:
         parsedResults = JSON.parse(jsonText);
       } else if (apiProvider === 'openai') {
         parsedResults = await callOpenAICompatibleAPI('https://api.openai.com/v1/chat/completions', openaiApiKey, 'gpt-4o');
-      } else if (apiProvider === 'grok') {
-        parsedResults = await callOpenAICompatibleAPI('https://api.groq.com/openai/v1/chat/completions', grokApiKey, 'llama-3.1-70b-versatile');
-      } else if (apiProvider === 'deepseek') {
-        parsedResults = await callOpenAICompatibleAPI('https://api.deepseek.com/v1/chat/completions', deepseekApiKey, 'deepseek-chat');
       }
 
       if (!parsedResults || !parsedResults.scenes || !Array.isArray(parsedResults.scenes) || typeof parsedResults.full_voiceover !== 'string') {
@@ -402,15 +400,7 @@ For each scene object in the 'scenes' array, provide:
         </div>
         <div>
           <label className="block text-sm font-semibold mb-1">2. Chọn AI Model</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-lg bg-slate-800 p-1 border border-slate-700">
-            <Button 
-              variant={apiProvider === 'google' ? 'active' : 'secondary'} 
-              onClick={() => setApiProvider('google')}
-              className="flex-1 text-xs sm:text-sm"
-              disabled={isGenerating}
-            >
-              Google Gemini
-            </Button>
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-800 p-1 border border-slate-700">
             <Button 
               variant={apiProvider === 'openai' ? 'active' : 'secondary'} 
               onClick={() => setApiProvider('openai')}
@@ -420,20 +410,12 @@ For each scene object in the 'scenes' array, provide:
               OpenAI GPT-4o
             </Button>
             <Button 
-              variant={apiProvider === 'grok' ? 'active' : 'secondary'} 
-              onClick={() => setApiProvider('grok')}
+              variant={apiProvider === 'google' ? 'active' : 'secondary'} 
+              onClick={() => setApiProvider('google')}
               className="flex-1 text-xs sm:text-sm"
               disabled={isGenerating}
             >
-              Grok Llama 3
-            </Button>
-            <Button 
-              variant={apiProvider === 'deepseek' ? 'active' : 'secondary'} 
-              onClick={() => setApiProvider('deepseek')}
-              className="flex-1 text-xs sm:text-sm"
-              disabled={isGenerating}
-            >
-              Deepseek
+              Google Gemini
             </Button>
           </div>
         </div>
