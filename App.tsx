@@ -11,8 +11,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('script');
   const [googleApiKey, setGoogleApiKey] = useState<string>(() => localStorage.getItem('googleApiKey') || '');
   const [openaiApiKey, setOpenaiApiKey] = useState<string>(() => localStorage.getItem('openaiApiKey') || '');
-  const [grokApiKey, setGrokApiKey] = useState<string>(() => localStorage.getItem('grokApiKey') || '');
-  const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => localStorage.getItem('deepseekApiKey') || '');
 
   const handleGoogleKeySave = (key: string) => {
     setGoogleApiKey(key);
@@ -23,17 +21,6 @@ const App: React.FC = () => {
     setOpenaiApiKey(key);
     localStorage.setItem('openaiApiKey', key);
   };
-  
-  const handleGrokKeySave = (key: string) => {
-    setGrokApiKey(key);
-    localStorage.setItem('grokApiKey', key);
-  };
-
-  const handleDeepseekKeySave = (key: string) => {
-    setDeepseekApiKey(key);
-    localStorage.setItem('deepseekApiKey', key);
-  };
-
 
   const TabButton: React.FC<{ tabName: Tab; label: string }> = ({ tabName, label }) => (
     <Button
@@ -60,18 +47,12 @@ const App: React.FC = () => {
             {activeTab === 'script' && <ScriptGeneratorTab 
                 googleApiKey={googleApiKey} 
                 openaiApiKey={openaiApiKey}
-                grokApiKey={grokApiKey}
-                deepseekApiKey={deepseekApiKey}
             />}
             {activeTab === 'profile' && <SettingsTab 
                 googleApiKey={googleApiKey}
                 openaiApiKey={openaiApiKey}
-                grokApiKey={grokApiKey}
-                deepseekApiKey={deepseekApiKey}
                 onGoogleKeySave={handleGoogleKeySave}
                 onOpenaiKeySave={handleOpenaiKeySave}
-                onGrokKeySave={handleGrokKeySave}
-                onDeepseekKeySave={handleDeepseekKeySave}
             />}
           </div>
 
