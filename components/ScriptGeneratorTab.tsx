@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import Button from './shared/Button';
@@ -129,27 +130,29 @@ You are a unique creative entity, a fusion of a master playwright, a meticulous 
 - My request will specify the exact number of scenes required (e.g., "Total Scenes to Generate: 38").
 - You MUST generate **EXACTLY** that number of scenes. This is an absolute, non-negotiable mathematical requirement. Any deviation is a critical failure. Each scene represents an 8-second video clip.
 
-**LAW #2: THE LAW OF DETAILED JSON PROMPTS (PURE VISUALS)**
+**LAW #2: THE LAW OF DETAILED, ENGLISH-ONLY JSON PROMPTS (PURE VISUALS)**
 - The 'prompt' field is designed exclusively for the VEO 3.1 video generation AI and **MUST BE A JSON OBJECT**.
 - This object must contain six specific keys: \`subject\`, \`action\`, \`setting\`, \`camera_shot\`, \`style\`, and \`sound\`.
-- All values in this object MUST be in **ENGLISH**.
+- **CRITICAL LANGUAGE RULE:** All values within this 'prompt' object **MUST BE IN ENGLISH. NO VIETNAMESE OR ANY OTHER LANGUAGE IS ALLOWED IN THE PROMPT OBJECT.** This is non-negotiable.
 - **ABSOLUTE PROHIBITION:** The values within the 'prompt' object must describe visuals, camera actions, and **ambient environment sounds ONLY**. They must contain **NO DIALOGUE, NO NARRATION, NO ON-SCREEN TEXT, and NO WRITTEN WORDS** of any kind. It is a purely visual and atmospheric guide. Prompts containing text like "a scientist explaining..." or "a book titled..." are strictly forbidden.
 
-**LAW #3: THE LAW OF JSON INTEGRITY**
+**LAW #3: THE LAW OF JSON INTEGRITY AND BILINGUAL CONTENT**
 - Your entire response MUST be a single JSON object. Do not include any introductory text, explanations, or markdown formatting like \`\`\`json. Just the raw, valid JSON.
 - The root JSON object must contain a single key: \`"scenes"\`, which holds an array of scene objects.
-- Each object inside the \`"scenes"\` array must contain exactly three keys:
+- Each object inside the \`"scenes"\` array must contain exactly three keys with specific language requirements:
     1.  \`"scene"\` (integer): The scene number, starting sequentially from 1.
-    2.  \`"description"\` (Vietnamese string): This is the detailed script/narration for the scene. It tells the story in Vietnamese, following the hypothetical, question-and-answer style.
-    3.  \`"prompt"\` (JSON object): The detailed, structured visual prompt for the video AI, adhering strictly to LAW #2.
+    2.  \`"description"\` (Vietnamese string): This is the detailed script/narration for the scene. It **MUST be in VIETNAMESE**.
+    3.  \`"prompt"\` (JSON object): The detailed, structured visual prompt for the video AI. The entire content of this object **MUST be in ENGLISH**, adhering strictly to LAW #2.
 
 ---
 **FINAL MANDATORY SELF-CORRECTION CHECK:**
 Before outputting, you must verify:
 1.  Does the number of scenes in the "scenes" array exactly match the number I requested?
 2.  Is every single 'prompt' field a JSON object with the six required keys?
-3.  Does every value within the 'prompt' object contain ONLY visual and ambient sound descriptions, with zero dialogue or text?
-4.  Is the entire output one single, perfectly-formed JSON object and nothing else?
+3.  Is every value within every 'prompt' object **written in ENGLISH**?
+4.  Is every 'description' field **written in VIETNAMESE**?
+5.  Does every value within the 'prompt' object contain ONLY visual and ambient sound descriptions, with zero dialogue or text?
+6.  Is the entire output one single, perfectly-formed JSON object and nothing else?
 If any check fails, you must correct your response until it perfectly meets all laws.`;
 
   const handleGenerate = async () => {
