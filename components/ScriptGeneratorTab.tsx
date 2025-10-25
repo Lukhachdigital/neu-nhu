@@ -1,18 +1,28 @@
-
 import React, { useState } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import Button from './shared/Button';
 import Input from './shared/Input';
 
+// Define a structured prompt
+interface Prompt {
+  subject: string;
+  action: string;
+  setting: string;
+  camera_shot: string;
+  style: string;
+  sound: string;
+}
+
 interface Scene {
   scene: number;
   description: string;
-  prompt: string;
+  prompt: Prompt; // The prompt is now a structured object
 }
+
 
 interface ScriptGeneratorTabProps {
   googleApiKey: string;
-  openaiApiKey: string;
+  openaiApiKey:string;
 }
 
 // Function to parse duration string into seconds
@@ -100,89 +110,47 @@ const ScriptGeneratorTab: React.FC<ScriptGeneratorTabProps> = ({ googleApiKey, o
   const [idea, setIdea] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('');
   const [scenes, setScenes] = useState<Scene[]>([]);
-  const [fullVoiceover, setFullVoiceover] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
   const [apiProvider, setApiProvider] = useState<'openai' | 'google'>('openai');
   const [scriptType, setScriptType] = useState<string>('KH Viễn tưởng / Triết học');
 
-  const systemInstruction = `You are a master storyteller—a novelist, playwright, and philosopher—crafting scripts for the YouTube channel "Nếu Như?". Your mission is to weave terrifying, thought-provoking narratives that explore the deepest "what if" questions. Your style must be captivating, pulling the audience into a chilling speculative journey from which they can't look away.
+  const systemInstruction = `**CRITICAL TASK: HYPOTHETICAL SCRIPT AND VEO 3.1 PROMPT GENERATION (JSON ONLY)**
 
-**CHANNEL THEME:**
-The channel delves into terrifying hypothetical questions that challenge our perception of reality: *what if, philosophical horror, cosmic dread, alternate histories, scientific nightmares, existential questions.* Your goal is to make the audience feel the chilling implications of the scenario.
+You are a unique creative entity, a fusion of a master playwright, a meticulous historian, and an intrepid traveler through alternate realities. Your sole purpose is to receive my "What If...?" idea and weave it into a detailed, scene-by-scene video script. Your entire output must be a single, valid JSON object, perfectly formatted for a video production workflow using Flow VEO 3.1.
 
-**SCRIPT STYLE (CRITICAL):**
-- **Hypothetical & Question-Driven:** The entire script must be a relentless exploration of the core "what if" question. Constantly pose rhetorical and direct questions to the audience throughout the narration to keep them engaged and thinking. Don't just state facts; question everything.
-- **Dramatic & Kịch tính (Suspenseful):** Build tension throughout the script. Use dramatic language, vivid imagery, and a sense of escalating stakes. Every sentence should contribute to a feeling of suspense, dread, or awe. The narrative arc should be compelling and full of twists and chilling revelations.
+**YOUR CORE METHODOLOGY: THE HYPOTHETICAL NARRATIVE**
+- Your script must be structured as a speculative exploration. You will constantly pose "what if" questions and then answer them through the narrative of the scenes, creating a thought-provoking, documentary-style story from a reality that could have been.
 
-**OUTPUT STRUCTURE (CRITICAL):**
-Your entire output must be a single JSON object with two main keys: "full_voiceover" and "scenes".
-1.  **'full_voiceover' (String):** This is the complete, continuous narration for the entire video. It must be in VIETNAMESE.
-2.  **'scenes' (Array of Objects):** This is an array of scene objects. Each scene object corresponds to a part of the 'full_voiceover' and describes the visuals for it.
+**UNBREAKABLE LAWS OF YOUR OUTPUT:**
 
-**VOICEOVER WORD COUNT & QUALITY (ABSOLUTELY CRITICAL):**
-1.  **Strict Word Count per Scene:** The 'full_voiceover' must be logically divided among the scenes. The portion of the voiceover corresponding to EACH individual scene MUST contain between 120 and 126 Vietnamese words. This is a strict, non-negotiable rule. Do not average the word count; every single scene's text segment must meet this requirement.
-2.  **Flawless Language:** The entire 'full_voiceover' MUST have perfect Vietnamese grammar, spelling, and punctuation. The text must be ready for direct use in a Text-to-Speech (TTS) engine without requiring any corrections from the user. Use commas, periods, and sentence structures that create a natural, engaging, and professional narration.
+**LAW #1: THE LAW OF PRECISE SCENE COUNT**
+- My request will specify the exact number of scenes required (e.g., "Total Scenes to Generate: 38").
+- You MUST generate **EXACTLY** that number of scenes. This is an absolute, non-negotiable mathematical requirement. Any deviation is a critical failure. Each scene represents an 8-second video clip.
 
-**SCENE & DURATION CALCULATION (ABSOLUTELY CRITICAL):**
-- **Each scene you generate will be turned into an 8-second video clip.** This is a fixed, non-negotiable rule.
-- You MUST calculate the total number of scenes required based on the user's requested video duration.
-- **Formula:** Total Scenes = (Total Duration in Seconds) / 8.
-- **Example:** For a 5-minute (300 seconds) video, you must generate approximately 37-38 scenes. A script with only 5 or 6 scenes for a 5-minute video is a complete failure and does not follow instructions.
-- The 'full_voiceover' must be divided logically across this calculated number of scenes, adhering to the strict word count per scene.
+**LAW #2: THE LAW OF DETAILED JSON PROMPTS (PURE VISUALS)**
+- The 'prompt' field is designed exclusively for the VEO 3.1 video generation AI and **MUST BE A JSON OBJECT**.
+- This object must contain six specific keys: \`subject\`, \`action\`, \`setting\`, \`camera_shot\`, \`style\`, and \`sound\`.
+- All values in this object MUST be in **ENGLISH**.
+- **ABSOLUTE PROHIBITION:** The values within the 'prompt' object must describe visuals, camera actions, and **ambient environment sounds ONLY**. They must contain **NO DIALOGUE, NO NARRATION, NO ON-SCREEN TEXT, and NO WRITTEN WORDS** of any kind. It is a purely visual and atmospheric guide. Prompts containing text like "a scientist explaining..." or "a book titled..." are strictly forbidden.
 
-**SCENE OBJECT REQUIREMENTS:**
-For each scene object in the 'scenes' array, provide:
-1.  **'description' (VIETNAMESE):** A summary of what happens in this scene.
-2.  **'prompt' (ENGLISH):** A text prompt for the VEO 3.1 video generation AI.
+**LAW #3: THE LAW OF JSON INTEGRITY**
+- Your entire response MUST be a single JSON object. Do not include any introductory text, explanations, or markdown formatting like \`\`\`json. Just the raw, valid JSON.
+- The root JSON object must contain a single key: \`"scenes"\`, which holds an array of scene objects.
+- Each object inside the \`"scenes"\` array must contain exactly three keys:
+    1.  \`"scene"\` (integer): The scene number, starting sequentially from 1.
+    2.  \`"description"\` (Vietnamese string): This is the detailed script/narration for the scene. It tells the story in Vietnamese, following the hypothetical, question-and-answer style.
+    3.  \`"prompt"\` (JSON object): The detailed, structured visual prompt for the video AI, adhering strictly to LAW #2.
 
-**CRITICAL REQUIREMENTS FOR CONTENT:**
-1.  **Language:**
-    - 'full_voiceover' and 'description' MUST be in VIETNAMESE.
-    - 'prompt' MUST be in ENGLISH.
-2.  **Prompt Content for VEO 3.1 (VISUALS & AUDIO):**
-    - The 'prompt' MUST be a simple, single string of text.
-    - It must create visually stunning, epic, and hyper-realistic scenes that amplify the horror and philosophical depth of the script type.
-      - **KH Viễn tưởng / Triết học:** Describe unsettling futuristic tech, vast and lonely cosmic landscapes that evoke dread, epic scale highlighting humanity's insignificance, haunting symbolic imagery, and terrifyingly introspective scenes.
-      - **Lịch sử Giả tưởng:** Describe historically accurate settings twisted into a nightmarish version, dramatic and unsettlingly cinematic.
-      - **Kinh dị / Sinh tồn:** Evoke visceral dread, oppressive isolation, and imminent danger through visuals. Use atmospheric, deeply unsettling descriptions.
-      - **Thảm họa Tự nhiên:** Describe massive-scale destruction as an uncaring, terrifying force of nature, awe-inspiring yet horrifyingly chaotic scenes.
-      - **Tiền sử / Huyền bí:** Describe primal, brutal landscapes, terrifyingly giant dinosaurs, disturbing ancient rituals, and mythical beings of raw, incomprehensible power.
-      - **Xã hội / Chính trị:** Describe scenes reflecting terrifying societal shifts: ghost-like empty stock markets, massive, frenzied protests, cold and dystopian surveillance. Use powerful, disturbing symbolic imagery.
-    - **PROMPT AUDIO RULE (ABSOLUTE, NON-NEGOTIABLE REQUIREMENT):**
-        - **ZERO DIALOGUE OR SPEECH:** The 'prompt' string MUST NOT, under any circumstances, contain any character dialogue, spoken words, narration, or any text intended to be read aloud. NO EXCEPTIONS. The ONLY spoken words in the entire project come from the 'full_voiceover'. Any violation of this rule is a failure.
-        - **AMBIENT SOUNDS ARE MANDATORY:** Every prompt MUST include a detailed description of the ambient and environmental sounds. These sounds are critical for setting the mood. Focus on sounds that create horror, loneliness, tension, or scale (e.g., "the deafening silence of space," "the sound of rock grinding against rock," "the eerie hum of alien machinery," "the distant, mournful cry of an unknown creature").
-3.  **Contextual Freedom:** You have complete creative freedom to choose the setting (locations, character ethnicities, cultural elements) that best serves the terrifying narrative. The context should be compelling and internally consistent throughout the script.
-4.  **FINAL SCENE REQUIREMENT (CRITICAL):**
-    The very last scene of every script MUST be a direct question to the audience. This question should be thought-provoking, directly related to the video's theme, and designed to encourage comments and discussion. For example: "Bạn sẽ làm gì nếu ở trong tình huống đó? Hãy cho chúng tôi biết suy nghĩ của bạn." (What would you do in that situation? Let us know your thoughts.)
-
-**EXAMPLE OUTPUT (User Idea: "What if all water disappeared?", Duration: "30 seconds", Type: "Thảm họa Tự nhiên"):**
-{
-  "full_voiceover": "Nước, thứ mà ta coi là hiển nhiên, đã phản bội chúng ta bằng cách biến mất. Vịnh Hạ Long giờ đây là một sa mạc đá, một lời nhắc nhở lạnh lẽo về sự mong manh của chúng ta. Các thành phố lớn, từng nhộn nhịp, giờ im lặng đến chết chóc. Sông Thames chỉ còn là một vết sẹo trên mặt đất, và những con tàu nằm chỏng chơ như những bộ xương khổng lồ. Con người, tuyệt vọng, tìm kiếm những giọt cuối cùng, nhưng chỉ tìm thấy bụi và tuyệt vọng. Bạn có nghĩ rằng, chúng ta có thể tồn tại trong một thế giới như vậy không?",
-  "scenes": [
-    {
-      "scene": 1,
-      "description": "Vịnh Hạ Long, kỳ quan thiên nhiên thế giới, giờ đây trơ trọi một cách đáng sợ. Hàng ngàn hòn đảo đá vôi hùng vĩ đứng sừng sững trên một lòng vịnh khô cằn, nứt nẻ, thay vì mặt nước xanh biếc.",
-      "prompt": "hyper-realistic, 4k, cinematic drone shot panning across the dried-up Ha Long Bay, thousands of limestone karsts stand on a cracked, arid seabed under a harsh sun, sound of a haunting, howling wind echoing between the stone pillars, dust devils swirling ominously."
-    },
-    {
-      "scene": 2,
-      "description": "Thành phố London hoang tàn, sông Thames đã hoàn toàn khô cạn, để lộ ra lòng sông nứt nẻ. Những con tàu du lịch và thuyền bè nằm nghiêng ngả trên bùn đất khô cứng.",
-      "prompt": "hyper-realistic, 4k, cinematic shot of a deserted London, the River Thames is a massive, cracked trench, boats and ships lie stranded on the dry riverbed, a thick haze of dust hangs in the air, sound of desolate wind and the creaking of metal."
-    },
-    {
-       "scene": 3,
-       "description": "Một cảnh quay cận cảnh những bàn tay nứt nẻ, tuyệt vọng cào vào lớp đất khô trong một hồ chứa nước đã cạn kiệt, tìm kiếm độ ẩm một cách vô ích.",
-       "prompt": "hyper-realistic, 4k, dramatic close-up shot of cracked, dirty hands desperately digging into dry, parched earth at the bottom of an empty reservoir, the only sound is the scraping of dirt and hopeless, heavy breathing."
-    },
-    {
-       "scene": 4,
-       "description": "Một câu hỏi hiện ra trên màn hình đen, mời gọi sự tương tác của khán giả.",
-       "prompt": "Text on a black screen: 'Do you think humanity could survive in a world like this?' with subtle, ominous background music fading in."
-    }
-  ]
-}`;
+---
+**FINAL MANDATORY SELF-CORRECTION CHECK:**
+Before outputting, you must verify:
+1.  Does the number of scenes in the "scenes" array exactly match the number I requested?
+2.  Is every single 'prompt' field a JSON object with the six required keys?
+3.  Does every value within the 'prompt' object contain ONLY visual and ambient sound descriptions, with zero dialogue or text?
+4.  Is the entire output one single, perfectly-formed JSON object and nothing else?
+If any check fails, you must correct your response until it perfectly meets all laws.`;
 
   const handleGenerate = async () => {
     const apiKeys = {
@@ -202,23 +170,27 @@ For each scene object in the 'scenes' array, provide:
       setError("Please enter a content idea.");
       return;
     }
+    if (!selectedDuration) {
+      setError("Vui lòng chọn thời lượng video.");
+      return;
+    }
 
     setIsGenerating(true);
     setError(null);
     setScenes([]);
-    setFullVoiceover('');
     setCopiedItems(new Set());
 
-    let userPrompt = `Generate a script and video prompts based on these details:\n\nIdea: "${idea}"\nScript Type: "${scriptType}"`;
-    if (selectedDuration) {
-        const totalSeconds = parseDurationToSeconds(selectedDuration);
-        const requiredScenes = Math.round(totalSeconds / 8);
-        userPrompt += `\n\nCRITICAL DURATION & SCENE REQUIREMENT:\n- Video Duration: ${selectedDuration} (which is ${totalSeconds} seconds).\n- Each scene corresponds to an 8-second video clip.\n- Therefore, you MUST generate approximately ${requiredScenes} scenes for this script.\n- The 'full_voiceover' must be timed to last for ${totalSeconds} seconds and be split across these ${requiredScenes} scenes. Do not generate fewer scenes. This is the most important instruction.`;
-    } else {
-        userPrompt += `\n\nDesired Video Duration: "not specified". Generate a reasonable number of scenes for a short video, assuming each scene is 8 seconds.`;
+    const totalSeconds = parseDurationToSeconds(selectedDuration);
+    if (!totalSeconds) {
+        setError("Invalid duration format.");
+        setIsGenerating(false);
+        return;
     }
+    const numberOfScenes = Math.round(totalSeconds / 8);
 
-    const openAISystemInstruction = `${systemInstruction}\n\n**OUTPUT FORMAT (CRITICAL):**\nYour final output must be a single, valid JSON object with two keys: "full_voiceover" and "scenes". The value of "full_voiceover" must be a single string. The value of "scenes" must be an array of objects. Each scene object must contain 'scene', 'description', and 'prompt' keys as described in the main instructions.`;
+    let userPrompt = `Generate a script and video prompts based on these details:\n\n- Idea: "${idea}"\n- Script Type: "${scriptType}"\n- Total Scenes to Generate: ${numberOfScenes}`;
+    
+    const openAISystemInstruction = `${systemInstruction}\n\n**OUTPUT FORMAT (CRITICAL):**\nYour final output must be a single, valid JSON object with one key: "scenes". The value of "scenes" must be an array of objects. Each scene object must contain 'scene', 'description', and 'prompt' keys as described in the main instructions.`;
     
     const callOpenAICompatibleAPI = async (endpoint: string, apiKey: string, model: string) => {
         const response = await fetch(endpoint, {
@@ -260,24 +232,32 @@ For each scene object in the 'scenes' array, provide:
             responseSchema: {
               type: Type.OBJECT,
               properties: {
-                full_voiceover: {
-                  type: Type.STRING,
-                  description: "A single, continuous VIETNAMESE voiceover script for the entire video. Its length must be calculated to match the user's requested video duration when read at a normal pace."
-                },
                 scenes: {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
                     properties: {
                       scene: { type: Type.INTEGER, description: "The scene number, starting from 1." },
-                      description: { type: Type.STRING, description: "A VIETNAMESE description of what happens in this scene." },
-                      prompt: { type: Type.STRING, description: "A simple, realistic, ENGLISH text prompt for the video generation AI (visuals and ambient sound only)." },
+                      description: { type: Type.STRING, description: "This is the detailed script/narration for the scene, written in Vietnamese. It should follow a hypothetical 'what if' style." },
+                      prompt: {
+                        type: Type.OBJECT,
+                        description: "A detailed, structured visual prompt for the VEO 3.1 AI. Must be in English. ABSOLUTELY NO text or dialogue.",
+                        properties: {
+                          subject: { type: Type.STRING, description: "The main subject(s) of the scene. E.g., 'A lone astronaut', 'A bustling futuristic city'."},
+                          action: { type: Type.STRING, description: "What the subject is doing or what is happening. E.g., 'walking on a desolate alien planet', 'hover-cars weaving through massive skyscrapers'."},
+                          setting: { type: Type.STRING, description: "The environment or background. E.g., 'Two suns setting on the horizon', 'Rain-slicked neon-lit streets at night'."},
+                          camera_shot: { type: Type.STRING, description: "The camera angle, movement, or shot type. E.g., 'Dynamic low-angle tracking shot', 'Cinematic aerial drone shot', 'Extreme close-up on a character's eye'."},
+                          style: { type: Type.STRING, description: "The overall visual and artistic style. E.g., 'Hyperrealistic, 8K resolution, dramatic cinematic lighting, Unreal Engine 5 aesthetic'."},
+                          sound: { type: Type.STRING, description: "Ambient environmental sounds only. E.g., 'The low hum of futuristic machinery and distant sirens', 'The gentle rustle of alien flora and faint, otherworldly chirps'."}
+                        },
+                        required: ['subject', 'action', 'setting', 'camera_shot', 'style', 'sound']
+                      },
                     },
                     required: ['scene', 'description', 'prompt'],
                   },
                 }
               },
-              required: ['full_voiceover', 'scenes']
+              required: ['scenes']
             },
           },
         });
@@ -287,11 +267,10 @@ For each scene object in the 'scenes' array, provide:
         parsedResults = await callOpenAICompatibleAPI('https://api.openai.com/v1/chat/completions', openaiApiKey, 'gpt-4o');
       }
 
-      if (!parsedResults || !parsedResults.scenes || !Array.isArray(parsedResults.scenes) || typeof parsedResults.full_voiceover !== 'string') {
-        throw new Error(`Invalid response format from ${apiProvider}. Expected a 'scenes' array and a 'full_voiceover' string.`);
+      if (!parsedResults || !parsedResults.scenes || !Array.isArray(parsedResults.scenes)) {
+        throw new Error(`Invalid response format from ${apiProvider}. Expected a JSON object with a 'scenes' array.`);
       }
 
-      setFullVoiceover(parsedResults.full_voiceover || '');
       setScenes(parsedResults.scenes || []);
 
     } catch (e) {
@@ -302,9 +281,12 @@ For each scene object in the 'scenes' array, provide:
     }
   };
 
-  const handleCopy = (text: string, sceneNumber: number) => {
+  const handleCopy = (prompt: Prompt, sceneNumber: number) => {
+    // Combine the structured prompt into a single, effective string for VEO 3.1
+    const textToCopy = `${prompt.camera_shot} of ${prompt.subject} ${prompt.action} in ${prompt.setting}, ${prompt.style}. Ambient sounds of ${prompt.sound}.`;
+
     const textArea = document.createElement("textarea");
-    textArea.value = text;
+    textArea.value = textToCopy;
     textArea.style.position = 'fixed';
     textArea.style.top = '-9999px';
     textArea.style.left = '-9999px';
@@ -323,7 +305,12 @@ For each scene object in the 'scenes' array, provide:
   };
   
   const handleDownloadPrompts = () => {
-    const promptsText = scenes.map(scene => `SCENE ${scene.scene}:\n${scene.prompt}\n\n`).join('');
+    const promptsText = scenes.map(scene => {
+      const p = scene.prompt;
+      // Combine the structured prompt into a single string for the text file
+      const combinedPrompt = `${p.camera_shot} of ${p.subject} ${p.action} in ${p.setting}, ${p.style}. Ambient sounds of ${p.sound}.`;
+      return `SCENE ${scene.scene}:\n${combinedPrompt}\n\n`;
+    }).join('');
     const blob = new Blob([promptsText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -335,21 +322,8 @@ For each scene object in the 'scenes' array, provide:
     URL.revokeObjectURL(url);
   };
   
-  const handleDownloadVoiceover = () => {
-    const blob = new Blob([fullVoiceover], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'full_voiceover_script.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const handleDownloadScript = () => {
     const scriptObject = {
-        full_voiceover: fullVoiceover,
         scenes: scenes
     }
     const jsonString = JSON.stringify(scriptObject, null, 2);
@@ -433,7 +407,7 @@ For each scene object in the 'scenes' array, provide:
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold mb-1">4. Cài đặt thời lượng Video (tùy chọn)</label>
+          <label className="block text-sm font-semibold mb-1">4. Cài đặt thời lượng Video</label>
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-lg bg-slate-800 p-2 border border-slate-700">
             {durationOptions.map((d) => (
                 <Button
@@ -452,7 +426,7 @@ For each scene object in the 'scenes' array, provide:
           variant="primary"
           className="w-full text-lg py-3"
           onClick={handleGenerate}
-          disabled={isGenerating || !idea.trim()}
+          disabled={isGenerating || !idea.trim() || !selectedDuration}
         >
           {isGenerating ? (
             <span className="flex items-center justify-center">
@@ -472,7 +446,7 @@ For each scene object in the 'scenes' array, provide:
                 Download Prompts (.txt)
               </Button>
               <Button onClick={handleDownloadScript} variant="secondary" className="text-xs py-1">
-                Download Kịch bản
+                Download Kịch bản (.json)
               </Button>
             </div>
           )}
@@ -481,69 +455,58 @@ For each scene object in the 'scenes' array, provide:
           {isGenerating && (
               <div className="flex flex-col items-center justify-center h-full text-center">
                   <Spinner />
-                  <p className="mt-2 text-cyan-400">AI is writing, please wait...</p>
-                  <p className="text-xs text-gray-500 mt-1">This may take a moment.</p>
+                  <p className="mt-2 text-cyan-400">AI đang viết, vui lòng chờ...</p>
+                  <p className="text-xs text-gray-500 mt-1">Quá trình này có thể mất một lúc.</p>
               </div>
           )}
           {error && <ErrorDisplay message={error} />}
           
           {!isGenerating && scenes.length > 0 && (
-            <>
               <div className="mb-4 p-3 bg-slate-800 border-l-4 border-cyan-500 rounded-r-lg">
                   <h4 className="font-bold text-sm text-cyan-400">Quy trình làm việc được đề xuất:</h4>
                   <ol className="list-decimal list-inside text-xs text-gray-300 mt-2 space-y-1">
-                      <li>Tải xuống file <b className="text-green-300">"Nội dung Voice"</b> và sử dụng một công cụ AI Text-to-Speech (chuyển văn bản thành giọng nói) để tạo 1 file audio duy nhất.</li>
-                      <li>Sử dụng <b className="text-yellow-300">"Câu lệnh (Prompt)"</b> cho từng cảnh để tạo các video tương ứng với âm thanh môi trường trong VEO 3.1.</li>
-                      <li>Dùng phần mềm chỉnh sửa video để ghép file audio lồng tiếng vào chuỗi video đã tạo.</li>
+                      <li>Tải xuống file <b className="text-blue-300">"Kịch bản" (.json)</b> để lưu trữ hoặc file <b className="text-yellow-300">"Prompts" (.txt)</b> để sử dụng ngay.</li>
+                      <li>Sử dụng <b className="text-yellow-300">"Câu lệnh (Prompt)"</b> cho từng cảnh để tạo các video tương ứng (mỗi video 8 giây) với âm thanh môi trường trong Flow VEO 3.1.</li>
+                      <li>Dùng phần mềm chỉnh sửa video để ghép các video đã tạo thành một câu chuyện hoàn chỉnh. Bạn có thể thêm nhạc nền hoặc lồng tiếng của riêng mình ở bước này.</li>
                   </ol>
               </div>
-               {fullVoiceover && (
-                <div className="mb-4 p-3 bg-slate-800 border-l-4 border-green-500 rounded-r-lg space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-lg text-green-300">Toàn bộ nội dung Voice</h4>
-                    <Button onClick={handleDownloadVoiceover} variant="secondary" className="text-xs py-1.5 px-3">
-                      Download Voice (.txt)
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-200 mt-2 whitespace-pre-wrap italic">"{fullVoiceover}"</p>
-                </div>
-              )}
-            </>
           )}
 
           {!isGenerating && scenes.length === 0 && !error && (
-            <p className="text-center text-gray-500 pt-8">The generated script and prompts will appear here.</p>
+            <p className="text-center text-gray-500 pt-8">Kịch bản và prompt được tạo sẽ xuất hiện ở đây.</p>
           )}
           
           {scenes.map((scene) => {
             const isPromptCopied = copiedItems.has(`prompt-${scene.scene}`);
             return (
-                <div key={scene.scene} className="bg-slate-800 border border-slate-700 p-3 rounded-lg space-y-3">
-                <h4 className="font-bold text-cyan-400">Cảnh {scene.scene}</h4>
-                <div>
-                    <h5 className="text-sm font-semibold text-gray-100">Mô tả cảnh:</h5>
-                    <p className="text-sm text-gray-300 mt-1">{scene.description}</p>
-                </div>
-                <div>
-                    <div className="flex justify-between items-center mb-1">
-                    <h5 className="text-sm font-semibold text-yellow-300">Câu lệnh - Prompt</h5>
-                    <button 
-                        onClick={() => handleCopy(scene.prompt, scene.scene)} 
-                        className={`font-bold py-2 px-4 text-sm rounded-lg transition-all duration-300 w-32 text-center ${
-                            isPromptCopied 
-                            ? 'bg-green-600 text-white cursor-default' 
-                            : 'bg-slate-700 hover:bg-slate-600 text-white'
-                        }`}
-                        aria-label={`Copy prompt for scene ${scene.scene}`}
-                        disabled={isPromptCopied}
-                    >
-                        {isPromptCopied ? 'Đã chép!' : 'Copy Prompt'}
-                    </button>
-                    </div>
-                    <div className="bg-slate-900 rounded-md font-mono text-xs text-yellow-300 p-2">
-                    <p className="whitespace-pre-wrap break-words">{scene.prompt}</p>
-                    </div>
-                </div>
+                <div key={scene.scene} className="bg-slate-800 border border-slate-700 p-3 rounded-lg space-y-4">
+                  <h4 className="font-bold text-cyan-400">Cảnh {scene.scene}</h4>
+                  <div>
+                      <h5 className="text-sm font-semibold text-gray-100">Mô tả cảnh:</h5>
+                      <p className="text-sm text-gray-300 mt-1">{scene.description}</p>
+                  </div>
+                  <div>
+                      <div className="flex justify-between items-center mb-1">
+                          <h5 className="text-sm font-semibold text-yellow-300">Câu lệnh - Prompt (Cho VEO 3.1)</h5>
+                          <button 
+                              onClick={() => handleCopy(scene.prompt, scene.scene)} 
+                              className={`font-bold py-2 px-4 text-sm rounded-lg transition-all duration-300 w-32 text-center ${
+                                  isPromptCopied 
+                                  ? 'bg-green-600 text-white cursor-default' 
+                                  : 'bg-slate-700 hover:bg-slate-600 text-white'
+                              }`}
+                              aria-label={`Copy prompt for scene ${scene.scene}`}
+                              disabled={isPromptCopied}
+                          >
+                              {isPromptCopied ? 'Đã chép!' : 'Copy Prompt'}
+                          </button>
+                      </div>
+                      <div className="bg-slate-900 rounded-md font-mono text-xs text-yellow-300 p-2 overflow-x-auto">
+                        <pre className="whitespace-pre-wrap break-words">
+                          {JSON.stringify(scene.prompt, null, 2)}
+                        </pre>
+                      </div>
+                  </div>
                 </div>
             );
         })}
